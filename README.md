@@ -13,4 +13,4 @@ Run locally: `python -m http.server 5173` then open http://localhost:5173
 ![Night mode](shots/desktop-night.png)
 ![Mobile](shots/mobile.png)
 
-Retake: `python tools/shots.py` (needs Playwright, server running).
+Retake: `python tools/shots.py [url] [out_dir]` (needs Playwright). Also writes `sheet.jpg`, one small contact sheet of all views; review that one.
