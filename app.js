@@ -58,7 +58,21 @@ const $ = (s) => document.querySelector(s);
 const allDevices = () => state.rooms.flatMap((r) => r.devices);
 const dev = (id) => allDevices().find((d) => d.id === id);
 const isLight = (d) => /light|lamp|pendant/i.test(d.name) || d.id === 'lamp';
-const icons = () => window.lucide && lucide.createIcons();
+const SVG = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+  + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+function icons() { // swap <i data-lucide> for inline SVG from assets/icons.js: no CDN, nothing pops in late
+  document.querySelectorAll('i[data-lucide]').forEach((i) => {
+    const name = i.dataset.lucide;
+    i.outerHTML = `<svg class="lucide lucide-${name}" ${SVG}>${(window.ICONS || {})[name] || ''}</svg>`;
+  });
+}
+// controls are rebuilt on every render; these data-* keys find the same control again so focus never drops to <body>
+const FOCUS_KEYS = ['toggle', 'room', 'lock', 'auto', 'level', 'scene', 'mode', 'temp'];
+function focusedKey() {
+  const el = document.activeElement;
+  const k = el && el.dataset && FOCUS_KEYS.find((key) => key in el.dataset);
+  return k ? [k, el.dataset[k]] : null;
+}
 
 /* ---------- derived numbers ---------- */
 function deviceWatts(d) {
@@ -107,7 +121,11 @@ function renderTop() {
     : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   $('#date').textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
     + ' · ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-  document.querySelectorAll('.modes button').forEach((b) => b.setAttribute('aria-checked', b.dataset.mode === state.mode));
+  document.querySelectorAll('.modes button').forEach((b) => {
+    const on = b.dataset.mode === state.mode;
+    b.setAttribute('aria-checked', on);
+    b.tabIndex = on ? 0 : -1;
+  });
   const active = $(`.modes [data-mode="${state.mode}"]`);
   const ind = $('#modeInd');
   ind.style.width = active.offsetWidth + 'px';
@@ -120,11 +138,11 @@ function renderHero() {
   $('#pulseScore').textContent = p;
   const ring = $('#pulseRing');
   ring.style.strokeDashoffset = 314.16 * (1 - p / 100);
-  const tone = p >= 75 ? 'var(--leaf)' : p >= 55 ? 'var(--amber)' : 'var(--red)';
-  ring.style.stroke = tone;
+  const tone = p >= 75 ? 'leaf' : p >= 55 ? 'amber' : 'red';
+  ring.style.stroke = `var(--${tone})`;
   const word = $('#pulseWord');
   word.textContent = p >= 85 ? 'Excellent' : p >= 75 ? 'Good' : p >= 55 ? 'Fair' : 'Needs care';
-  word.style.color = tone;
+  word.style.color = `var(--${tone}-ink)`; // darker text shade of the ring color, for contrast
   $('#pulseTip').textContent = tip();
   $('#statIn').textContent = state.rooms[0].temp.toFixed(1) + '°';
   $('#statPower').textContent = (watts() / 1000).toFixed(2) + ' kW';
@@ -150,8 +168,9 @@ function devState(d) {
 
 function renderRooms() {
   $('#roomTabs').innerHTML = state.rooms.map((r) => `
-    <button class="chip" role="tab" aria-selected="${r.id === state.room}" data-room="${r.id}">
-      <i data-lucide="${r.icon}"></i>${r.name}</button>`).join('');
+    <button class="chip" role="tab" id="tab-${r.id}" aria-controls="roomPanel" aria-selected="${r.id === state.room}"
+      tabindex="${r.id === state.room ? 0 : -1}" data-room="${r.id}"><i data-lucide="${r.icon}"></i>${r.name}</button>`).join('');
+  $('#roomPanel').setAttribute('aria-labelledby', `tab-${state.room}`);
   const room = state.rooms.find((r) => r.id === state.room);
   const onCount = room.devices.filter((d) => d.on && d.type !== 'lock').length;
   $('#roomMeta').innerHTML = `
@@ -193,6 +212,9 @@ function renderEnergy() {
   $('#eSolar').textContent = solar.toFixed(1);
   $('#eCost').textContent = '€' + (grid * 0.27).toFixed(2);
   $('#solarSide').textContent = HOURS.reduce((s, h) => s + h.solar, 0).toFixed(1) + ' kWh';
+  const peak = HOURS.reduce((best, h, i) => (h.use > HOURS[best].use ? i : best), 0);
+  $('#chart').setAttribute('aria-label', `Hourly energy today: ${used.toFixed(1)} kWh used so far, ${solar.toFixed(1)} `
+    + `from solar, ${grid.toFixed(1)} from the grid. Busiest hour ${String(peak).padStart(2, '0')}:00.`);
   const max = 3.2, bw = 300 / 24;
   $('#chart').innerHTML = HOURS.map((h, i) => {
     const s = Math.min(h.use, h.solar), g = h.use - s;
@@ -218,9 +240,11 @@ function renderSecurity() {
 }
 
 function render() {
+  const focus = focusedKey();
   renderHero(); renderScenes(); renderRooms(); renderClimate(); renderEnergy(); renderSecurity();
   icons();
   renderTop(); // after icons, so the mode indicator measures final button widths
+  if (focus) document.querySelector(`[data-${focus[0]}="${focus[1]}"]`)?.focus();
 }
 
 let toastTimer;
@@ -267,9 +291,18 @@ document.addEventListener('click', (e) => {
   if (!b) return;
   const ds = b.dataset;
   if (ds.mode && ds.mode !== state.mode) { state.mode = ds.mode; state.scene = null; MODES[ds.mode](); }
-  else if (ds.scene) { state.scene = ds.scene; SCENE_FX[ds.scene](); toast(`Scene: ${SCENES.find((s) => s.id === ds.scene).name}`); }
+  else if (ds.scene) {
+    const name = SCENES.find((s) => s.id === ds.scene).name;
+    const leaving = ds.scene !== 'off' && state.mode !== 'home'; // a scene means someone is home and awake
+    if (leaving) { state.mode = 'home'; state.target = 21; }
+    state.scene = ds.scene; SCENE_FX[ds.scene]();
+    toast(`Scene: ${name}${leaving ? ' · back to Home mode' : ''}`);
+  }
   else if (ds.room) state.room = ds.room;
-  else if (ds.toggle) { const d = dev(ds.toggle); d.on = !d.on; state.scene = null; }
+  else if (ds.toggle) {
+    const d = dev(ds.toggle); d.on = !d.on; state.scene = null;
+    if (d.type === 'lock') toast(`${d.name} ${d.on ? 'locked' : 'unlocked'}`);
+  }
   else if (ds.lock) { const l = lockList().find((x) => x.id === ds.lock); l.on = !l.on; toast(`${l.name} ${l.on ? 'locked' : 'unlocked'}`); }
   else if (ds.auto) { const a = state.autos[ds.auto]; a.on = !a.on; }
   else if (ds.temp) state.target = Math.min(28, Math.max(15, state.target + Number(ds.temp)));
@@ -290,7 +323,27 @@ document.addEventListener('input', (e) => {
 });
 document.addEventListener('change', (e) => { if (e.target.dataset.level) render(); });
 
+// mode radiogroup + room tablist: one Tab stop each, arrow keys move and select (WAI-ARIA pattern)
+document.addEventListener('keydown', (e) => {
+  const group = e.target.closest('.modes, #roomTabs');
+  if (!group || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+  const items = [...group.querySelectorAll('button')];
+  const i = items.indexOf(e.target.closest('button'));
+  const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1
+    : (i + (/Right|Down/.test(e.key) ? 1 : -1) + items.length) % items.length;
+  e.preventDefault();
+  items[next].focus();
+  items[next].click();
+});
+
+document.querySelector('.nav').addEventListener('click', (e) => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  document.querySelectorAll('.nav a').forEach((x) => { x.classList.toggle('active', x === a); x.toggleAttribute('aria-current', x === a); });
+});
+
 window.addEventListener('resize', renderTop);
 setInterval(renderTop, 30000);
 render();
+document.documentElement.classList.remove('booting');
 document.fonts.ready.then(renderTop);

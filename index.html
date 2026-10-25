@@ -6,20 +6,24 @@
 <title>Hearthly Home Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=optional" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="preload" href="assets/icons.js" as="script">
+<link rel="preload" href="app.js" as="script">
+<!-- sections are filled by app.js: stay hidden until the first render so nothing jumps (3 s fallback if JS fails) -->
+<script>document.documentElement.classList.add('booting'); setTimeout(() => document.documentElement.classList.remove('booting'), 3000);</script>
 </head>
 <body>
 <div class="app">
 
   <aside class="side">
     <div class="brand"><span class="logo"><i data-lucide="flame"></i></span><b>Hearthly</b></div>
-    <nav class="nav">
-      <a class="active" href="#"><i data-lucide="layout-dashboard"></i><span>Overview</span></a>
-      <a href="#rooms"><i data-lucide="sofa"></i><span>Rooms</span></a>
-      <a href="#energy"><i data-lucide="zap"></i><span>Energy</span></a>
-      <a href="#security"><i data-lucide="shield-check"></i><span>Security</span></a>
-      <a href="#automations"><i data-lucide="workflow"></i><span>Automations</span></a>
+    <nav class="nav" aria-label="Sections">
+      <a class="active" aria-current="true" aria-label="Overview" href="#top"><i data-lucide="layout-dashboard"></i><span>Overview</span></a>
+      <a aria-label="Rooms" href="#rooms"><i data-lucide="sofa"></i><span>Rooms</span></a>
+      <a aria-label="Energy" href="#energy"><i data-lucide="zap"></i><span>Energy</span></a>
+      <a aria-label="Security" href="#security"><i data-lucide="shield-check"></i><span>Security</span></a>
+      <a aria-label="Automations" href="#automations"><i data-lucide="workflow"></i><span>Automations</span></a>
     </nav>
     <div class="side-card">
       <i data-lucide="sun"></i>
@@ -29,7 +33,7 @@
   </aside>
 
   <main class="main">
-    <header class="top">
+    <header class="top" id="top">
       <div>
         <p class="eyebrow" id="date"></p>
         <h1 id="greet">Good evening</h1>
@@ -37,16 +41,18 @@
       </div>
       <div class="modes" role="radiogroup" aria-label="Home mode">
         <span class="mode-ind" id="modeInd"></span>
-        <button role="radio" data-mode="home" aria-checked="true"><i data-lucide="house"></i>Home</button>
-        <button role="radio" data-mode="away" aria-checked="false"><i data-lucide="plane"></i>Away</button>
-        <button role="radio" data-mode="night" aria-checked="false"><i data-lucide="moon"></i>Night</button>
+        <button role="radio" data-mode="home" aria-checked="true" tabindex="0"><i data-lucide="house"></i>Home</button>
+        <button role="radio" data-mode="away" aria-checked="false" tabindex="-1"><i data-lucide="plane"></i>Away</button>
+        <button role="radio" data-mode="night" aria-checked="false" tabindex="-1"><i data-lucide="moon"></i>Night</button>
       </div>
     </header>
 
     <section class="hero card">
-      <img class="hero-art" src="assets/house.jpg" alt="Cutaway illustration of the house" onerror="this.remove()">
+      <img class="hero-art" src="assets/house-1100.jpg" srcset="assets/house-640.jpg 640w, assets/house-1100.jpg 1100w"
+        sizes="(max-width: 860px) 100vw, 620px" width="1100" height="614" decoding="async"
+        alt="Cutaway illustration of the house" onerror="this.remove()">
       <div class="pulse">
-        <svg viewBox="0 0 120 120" class="ring">
+        <svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
           <circle cx="60" cy="60" r="50" class="ring-bg"/>
           <circle cx="60" cy="60" r="50" class="ring-fg" id="pulseRing"/>
         </svg>
@@ -68,11 +74,13 @@
 
     <section class="rooms card" id="rooms">
       <div class="card-head">
-        <h2>Rooms</h2>
-        <div class="chips" id="roomTabs"></div>
+        <h2 id="roomsTitle">Rooms</h2>
+        <div class="chips" id="roomTabs" role="tablist" aria-labelledby="roomsTitle"></div>
       </div>
-      <div class="room-meta" id="roomMeta"></div>
-      <div class="devices" id="devices"></div>
+      <div id="roomPanel" role="tabpanel">
+        <div class="room-meta" id="roomMeta"></div>
+        <div class="devices" id="devices"></div>
+      </div>
     </section>
 
     <section class="card autos" id="automations">
@@ -85,7 +93,7 @@
     <section class="card climate">
       <div class="card-head"><h2>Climate</h2><span class="pill" id="hvacState">Heating</span></div>
       <div class="dial">
-        <svg viewBox="0 0 200 200">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
           <path class="dial-bg" d="M 43.4 156.6 A 80 80 0 1 1 156.6 156.6"/>
           <path class="dial-fg" id="dialArc" d="M 43.4 156.6 A 80 80 0 1 1 156.6 156.6"/>
         </svg>
@@ -102,7 +110,7 @@
         <div><b class="mono leaf" id="eSolar">0</b><span>kWh solar</span></div>
         <div><b class="mono" id="eCost">€0</b><span>grid cost</span></div>
       </div>
-      <svg class="chart" id="chart" viewBox="0 0 300 110" preserveAspectRatio="none"></svg>
+      <svg class="chart" id="chart" viewBox="0 0 300 110" preserveAspectRatio="none" role="img"></svg>
       <div class="ticks"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span></div>
       <div class="legend"><span><i class="sw leaf-bg"></i>Solar</span><span><i class="sw amber-bg"></i>Grid</span><span class="muted">kWh per hour</span></div>
     </section>
@@ -120,7 +128,7 @@
 
 <div class="toast" id="toast" role="status"></div>
 
-<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="assets/icons.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
