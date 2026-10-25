@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hearthly Home Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="side">
+    <div class="brand"><span class="logo"><i data-lucide="flame"></i></span><b>Hearthly</b></div>
+    <nav class="nav">
+      <a class="active" href="#"><i data-lucide="layout-dashboard"></i><span>Overview</span></a>
+      <a href="#rooms"><i data-lucide="sofa"></i><span>Rooms</span></a>
+      <a href="#energy"><i data-lucide="zap"></i><span>Energy</span></a>
+      <a href="#security"><i data-lucide="shield-check"></i><span>Security</span></a>
+      <a href="#automations"><i data-lucide="workflow"></i><span>Automations</span></a>
+    </nav>
+    <div class="side-card">
+      <i data-lucide="sun"></i>
+      <p>Solar today</p>
+      <b class="mono" id="solarSide">0 kWh</b>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div>
+        <p class="eyebrow" id="date"></p>
+        <h1 id="greet">Good evening</h1>
+        <p class="sub">Your home, in harmony.</p>
+      </div>
+      <div class="modes" role="radiogroup" aria-label="Home mode">
+        <span class="mode-ind" id="modeInd"></span>
+        <button role="radio" data-mode="home" aria-checked="true"><i data-lucide="house"></i>Home</button>
+        <button role="radio" data-mode="away" aria-checked="false"><i data-lucide="plane"></i>Away</button>
+        <button role="radio" data-mode="night" aria-checked="false"><i data-lucide="moon"></i>Night</button>
+      </div>
+    </header>
+
+    <section class="hero card">
+      <img class="hero-art" src="assets/house.jpg" alt="Cutaway illustration of the house" onerror="this.remove()">
+      <div class="pulse">
+        <svg viewBox="0 0 120 120" class="ring">
+          <circle cx="60" cy="60" r="50" class="ring-bg"/>
+          <circle cx="60" cy="60" r="50" class="ring-fg" id="pulseRing"/>
+        </svg>
+        <div class="pulse-num"><b class="mono" id="pulseScore">0</b><span>Home Pulse</span></div>
+      </div>
+      <div class="pulse-text">
+        <p class="eyebrow">Suggestion</p>
+        <p id="pulseTip"></p>
+      </div>
+      <ul class="hero-stats">
+        <li><i data-lucide="thermometer"></i><b class="mono" id="statIn">21°</b><span>Inside</span></li>
+        <li><i data-lucide="cloud-sun"></i><b class="mono">9°</b><span>Outside</span></li>
+        <li><i data-lucide="zap"></i><b class="mono" id="statPower">0 kW</b><span>Using now</span></li>
+        <li><i data-lucide="lock"></i><b id="statLocks">Locked</b><span>Doors</span></li>
+      </ul>
+    </section>
+
+    <section class="scenes" id="scenes"></section>
+
+    <section class="rooms card" id="rooms">
+      <div class="card-head">
+        <h2>Rooms</h2>
+        <div class="chips" id="roomTabs"></div>
+      </div>
+      <div class="room-meta" id="roomMeta"></div>
+      <div class="devices" id="devices"></div>
+    </section>
+  </main>
+
+  <aside class="rail">
+    <section class="card climate">
+      <div class="card-head"><h2>Climate</h2><span class="pill" id="hvacState">Heating</span></div>
+      <div class="dial">
+        <svg viewBox="0 0 200 200">
+          <path class="dial-bg" d="M 43.4 156.6 A 80 80 0 1 1 156.6 156.6"/>
+          <path class="dial-fg" id="dialArc" d="M 43.4 156.6 A 80 80 0 1 1 156.6 156.6"/>
+        </svg>
+        <div class="dial-num"><b class="mono" id="target">21.0°</b><span>Target · inside <span id="inside">21.5°</span></span></div>
+        <button class="round minus" data-temp="-0.5" aria-label="Lower temperature"><i data-lucide="minus"></i></button>
+        <button class="round plus" data-temp="0.5" aria-label="Raise temperature"><i data-lucide="plus"></i></button>
+      </div>
+    </section>
+
+    <section class="card energy" id="energy">
+      <div class="card-head"><h2>Energy</h2><span class="pill">Today</span></div>
+      <div class="energy-tot">
+        <div><b class="mono" id="eUsed">0</b><span>kWh used</span></div>
+        <div><b class="mono leaf" id="eSolar">0</b><span>kWh solar</span></div>
+        <div><b class="mono" id="eCost">€0</b><span>grid cost</span></div>
+      </div>
+      <svg class="chart" id="chart" viewBox="0 0 300 110" preserveAspectRatio="none"></svg>
+      <div class="legend"><span><i class="sw leaf-bg"></i>Solar</span><span><i class="sw amber-bg"></i>Grid</span><span class="muted">00 — 23h</span></div>
+    </section>
+
+    <section class="card security" id="security">
+      <div class="card-head"><h2>Security</h2><span class="pill" id="secPill">Armed</span></div>
+      <div class="cam">
+        <span class="live">● LIVE</span>
+        <span class="cam-label">Porch camera · motion 18:42</span>
+      </div>
+      <ul class="locks" id="locks"></ul>
+    </section>
+
+    <section class="card autos" id="automations">
+      <div class="card-head"><h2>Automations</h2></div>
+      <ul id="autos"></ul>
+    </section>
+  </aside>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
