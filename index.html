@@ -50,7 +50,7 @@
           <circle cx="60" cy="60" r="50" class="ring-bg"/>
           <circle cx="60" cy="60" r="50" class="ring-fg" id="pulseRing"/>
         </svg>
-        <div class="pulse-num"><b class="mono" id="pulseScore">0</b><span>Home Pulse</span></div>
+        <div class="pulse-num"><b class="mono" id="pulseScore">0</b><span>Home Pulse</span><em id="pulseWord"></em></div>
       </div>
       <div class="pulse-text">
         <p class="eyebrow">Suggestion</p>
@@ -73,6 +73,11 @@
       </div>
       <div class="room-meta" id="roomMeta"></div>
       <div class="devices" id="devices"></div>
+    </section>
+
+    <section class="card autos" id="automations">
+      <div class="card-head"><h2>Automations</h2><span class="pill" id="autoPill"></span></div>
+      <ul id="autos"></ul>
     </section>
   </main>
 
@@ -98,7 +103,8 @@
         <div><b class="mono" id="eCost">€0</b><span>grid cost</span></div>
       </div>
       <svg class="chart" id="chart" viewBox="0 0 300 110" preserveAspectRatio="none"></svg>
-      <div class="legend"><span><i class="sw leaf-bg"></i>Solar</span><span><i class="sw amber-bg"></i>Grid</span><span class="muted">00 — 23h</span></div>
+      <div class="ticks"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span></div>
+      <div class="legend"><span><i class="sw leaf-bg"></i>Solar</span><span><i class="sw amber-bg"></i>Grid</span><span class="muted">kWh per hour</span></div>
     </section>
 
     <section class="card security" id="security">
@@ -108,11 +114,6 @@
         <span class="cam-label">Porch camera · motion 18:42</span>
       </div>
       <ul class="locks" id="locks"></ul>
-    </section>
-
-    <section class="card autos" id="automations">
-      <div class="card-head"><h2>Automations</h2></div>
-      <ul id="autos"></ul>
     </section>
   </aside>
 </div>

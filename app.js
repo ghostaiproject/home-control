@@ -120,7 +120,11 @@ function renderHero() {
   $('#pulseScore').textContent = p;
   const ring = $('#pulseRing');
   ring.style.strokeDashoffset = 314.16 * (1 - p / 100);
-  ring.style.stroke = p >= 75 ? 'var(--leaf)' : p >= 55 ? 'var(--amber)' : 'var(--red)';
+  const tone = p >= 75 ? 'var(--leaf)' : p >= 55 ? 'var(--amber)' : 'var(--red)';
+  ring.style.stroke = tone;
+  const word = $('#pulseWord');
+  word.textContent = p >= 85 ? 'Excellent' : p >= 75 ? 'Good' : p >= 55 ? 'Fair' : 'Needs care';
+  word.style.color = tone;
   $('#pulseTip').textContent = tip();
   $('#statIn').textContent = state.rooms[0].temp.toFixed(1) + '°';
   $('#statPower').textContent = (watts() / 1000).toFixed(2) + ' kW';
@@ -176,7 +180,7 @@ function renderClimate() {
   const arc = $('#dialArc');
   arc.style.strokeDashoffset = 377 * (1 - frac);
   arc.style.stroke = t >= 23 ? 'var(--red)' : t <= 18 ? 'var(--blue)' : 'var(--amber)';
-  $('#hvacState').textContent = state.mode === 'away' ? 'Eco 17°' : t > state.rooms[0].temp ? 'Heating' : 'Holding';
+  $('#hvacState').textContent = state.mode === 'away' ? `Eco ${t}°` : t > state.rooms[0].temp ? 'Heating' : 'Holding';
 }
 
 function renderEnergy() {
@@ -207,6 +211,7 @@ function renderSecurity() {
     <li class="${l.on ? '' : 'open'}"><span class="ic"><i data-lucide="${l.on ? 'lock' : 'lock-open'}"></i></span>
       <div><b>${l.name}</b><small>${l.on ? 'Locked' : 'Unlocked'}</small></div>
       <button class="switch leaf" role="switch" aria-checked="${l.on}" aria-label="${l.name} lock" data-lock="${l.id}"></button></li>`).join('');
+  $('#autoPill').textContent = `${state.autos.filter((a) => a.on).length} of ${state.autos.length} active`;
   $('#autos').innerHTML = state.autos.map((a, i) => `
     <li><span class="ic"><i data-lucide="${a.icon}"></i></span><div><b>${a.name}</b><small>${a.does}</small></div>
       <button class="switch" role="switch" aria-checked="${a.on}" aria-label="${a.name}" data-auto="${i}"></button></li>`).join('');
