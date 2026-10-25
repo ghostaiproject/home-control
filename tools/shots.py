@@ -1,10 +1,10 @@
-"""Screenshot the running dashboard: python tools/shots.py [url] -> shots/*.png"""
+"""Screenshot the running dashboard: python tools/shots.py [url] [out_dir] -> shots/*.png"""
 import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:5173/'
-OUT = Path(__file__).resolve().parent.parent / 'shots'
+OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).resolve().parent.parent / 'shots'
 OUT.mkdir(exist_ok=True)
 
 with sync_playwright() as p:
